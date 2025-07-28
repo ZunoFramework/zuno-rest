@@ -5,6 +5,7 @@
 
 #include "RequestInterceptor.hpp"
 #include "ResponseInterceptor.hpp"
+#include <future>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
@@ -25,6 +26,7 @@ public:
   RestClient();
   ~RestClient();
 
+  // Métodos síncronos
   HttpResponse
   get(const std::string &url,
       const std::unordered_map<std::string, std::string> &headers = {});
@@ -44,6 +46,26 @@ public:
   head(const std::string &url,
        const std::unordered_map<std::string, std::string> &headers = {});
 
+  // Métodos asíncronos
+  std::future<HttpResponse>
+  getAsync(const std::string &url,
+           const std::unordered_map<std::string, std::string> &headers = {});
+  std::future<HttpResponse>
+  postAsync(const std::string &url, const nlohmann::json &data,
+            const std::unordered_map<std::string, std::string> &headers = {});
+  std::future<HttpResponse>
+  putAsync(const std::string &url, const nlohmann::json &data,
+           const std::unordered_map<std::string, std::string> &headers = {});
+  std::future<HttpResponse>
+  patchAsync(const std::string &url, const nlohmann::json &data,
+             const std::unordered_map<std::string, std::string> &headers = {});
+  std::future<HttpResponse>
+  delAsync(const std::string &url,
+           const std::unordered_map<std::string, std::string> &headers = {});
+  std::future<HttpResponse>
+  headAsync(const std::string &url,
+            const std::unordered_map<std::string, std::string> &headers = {});
+
   void
   setRequestInterceptor(std::shared_ptr<RequestInterceptor> requestInterceptor);
   void setResponseInterceptor(
@@ -54,6 +76,7 @@ private:
   performRequest(const std::string &url, const std::string &method,
                  const nlohmann::json &data,
                  const std::unordered_map<std::string, std::string> &headers);
+
   static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
                               void *userp);
 

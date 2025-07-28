@@ -2,57 +2,56 @@
 #include <iostream>
 #include <unordered_map>
 
-class ExampleInterceptor : public zuno::RequestInterceptor {
+// Interceptor de solicitud: muestra la URL y método antes de enviar
+class ExampleRequestInterceptor : public zuno::RequestInterceptor {
 public:
   void interceptRequest(
       std::string &url, std::string &method, nlohmann::json &data,
       std::unordered_map<std::string, std::string> &headers) override {
-    std::cout << "Intercepting request to URL: " << url << std::endl;
+    std::cout << "[→ Solicitud] " << method << " " << url << std::endl;
   }
 };
 
-class SimpleResponseInterceptor : public zuno::ResponseInterceptor {
+// Interceptor de respuesta: muestra la longitud del cuerpo recibido
+class ExampleResponseInterceptor : public zuno::ResponseInterceptor {
 public:
   void interceptResponse(std::string &url, std::string &method,
                          nlohmann::json &data,
                          std::unordered_map<std::string, std::string> &headers,
                          zuno::HttpResponse &response) override {
-    std::cout << "Response data: " << response.body << std::endl;
+    std::cout << "[← Respuesta] Código: " << response.statusCode
+              << " | Bytes: " << response.body.size() << std::endl;
   }
 };
 
 int main() {
+  // Crear cliente y configurar interceptores
   zuno::RestClient client;
+  client.setRequestInterceptor(std::make_shared<ExampleRequestInterceptor>());
+  client.setResponseInterceptor(std::make_shared<ExampleResponseInterceptor>());
 
-  auto reqInterceptor = std::make_shared<ExampleInterceptor>();
-  client.setRequestInterceptor(reqInterceptor);
-
-  auto resInterceptor = std::make_shared<SimpleResponseInterceptor>();
-  client.setResponseInterceptor(resInterceptor);
-
+  // Encabezados comunes
   std::unordered_map<std::string, std::string> headers = {
       {"Content-Type", "application/json"}, {"charset", "UTF-8"}};
 
-  std::string getUrl = "https://jsonplaceholder.typicode.com/posts/1";
-  zuno::HttpResponse getResponse = client.get(getUrl, headers);
+  // 🔍 URLs
+  const std::string baseUrl = "https://jsonplaceholder.typicode.com/posts";
+  const std::string resourceUrl = baseUrl + "/1";
 
-  std::string postUrl = "https://jsonplaceholder.typicode.com/posts";
-  nlohmann::json postData = {{"title", "foo"}, {"body", "bar"}, {"userId", 1}};
+  // 📡 Peticiones
+  zuno::HttpResponse getResp = client.get(resourceUrl, headers);
+  zuno::HttpResponse postResp = client.post(
+      baseUrl, {{"title", "foo"}, {"body", "bar"}, {"userId", 1}}, headers);
+  zuno::HttpResponse putResp = client.put(
+      resourceUrl,
+      {{"id", 1}, {"title", "foo"}, {"body", "bar"}, {"userId", 1}}, headers);
+  zuno::HttpResponse patchResp =
+      client.patch(resourceUrl, {{"title", "foo"}}, headers);
+  zuno::HttpResponse deleteResp = client.del(resourceUrl, headers);
+  zuno::HttpResponse headResp = client.head(resourceUrl, headers);
 
-  std::string putUrl = "https://jsonplaceholder.typicode.com/posts/1";
-  nlohmann::json putData = {
-      {"id", 1}, {"title", "foo"}, {"body", "bar"}, {"userId", 1}};
-  zuno::HttpResponse putResponse = client.put(putUrl, putData, headers);
-
-  std::string patchUrl = "https://jsonplaceholder.typicode.com/posts/1";
-  nlohmann::json patchData = {{"title", "foo"}};
-  zuno::HttpResponse patchResponse = client.patch(patchUrl, patchData, headers);
-
-  std::string deleteUrl = "https://jsonplaceholder.typicode.com/posts/1";
-  zuno::HttpResponse deleteResponse = client.del(deleteUrl, headers);
-
-  std::string headUrl = "https://jsonplaceholder.typicode.com/posts/1";
-  zuno::HttpResponse headResponse = client.head(headUrl, headers);
+  // 📋 Mostrar contenido de respuestas relevantes
+  std::cout << "\n[GET Body]\n" << getResp.body << "\n";
 
   return 0;
 }

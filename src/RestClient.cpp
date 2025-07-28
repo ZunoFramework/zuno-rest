@@ -2,6 +2,7 @@
 #include "zuno/RequestInterceptor.hpp"
 #include "zuno/ResponseInterceptor.hpp"
 #include <curl/curl.h>
+#include <future>
 #include <iostream>
 #include <memory>
 
@@ -36,12 +37,11 @@ HttpResponse RestClient::performRequest(
                                          mutableHeaders);
   }
 
-  CURL *curl;
+  CURL *curl = curl_easy_init();
   CURLcode res;
   std::string readBuffer;
   HttpResponse response;
 
-  curl = curl_easy_init();
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, mutableUrl.c_str());
 
@@ -105,6 +105,7 @@ HttpResponse RestClient::performRequest(
   return response;
 }
 
+// Síncronos
 HttpResponse
 RestClient::get(const std::string &url,
                 const std::unordered_map<std::string, std::string> &headers) {
@@ -141,12 +142,54 @@ RestClient::head(const std::string &url,
   return performRequest(url, "HEAD", {}, headers);
 }
 
+// Asíncronos
+std::future<HttpResponse> RestClient::getAsync(
+    const std::string &url,
+    const std::unordered_map<std::string, std::string> &headers) {
+  return std::async(std::launch::async, &RestClient::get, this, url, headers);
+}
+
+std::future<HttpResponse> RestClient::postAsync(
+    const std::string &url, const nlohmann::json &data,
+    const std::unordered_map<std::string, std::string> &headers) {
+  return std::async(std::launch::async, &RestClient::post, this, url, data,
+                    headers);
+}
+
+std::future<HttpResponse> RestClient::putAsync(
+    const std::string &url, const nlohmann::json &data,
+    const std::unordered_map<std::string, std::string> &headers) {
+  return std::async(std::launch::async, &RestClient::put, this, url, data,
+                    headers);
+}
+
+std::future<HttpResponse> RestClient::patchAsync(
+    const std::string &url, const nlohmann::json &data,
+    const std::unordered_map<std::string, std::string> &headers) {
+  return std::async(std::launch::async, &RestClient::patch, this, url, data,
+                    headers);
+}
+
+std::future<HttpResponse> RestClient::delAsync(
+    const std::string &url,
+    const std::unordered_map<std::string, std::string> &headers) {
+  return std::async(std::launch::async, &RestClient::del, this, url, headers);
+}
+
+std::future<HttpResponse> RestClient::headAsync(
+    const std::string &url,
+    const std::unordered_map<std::string, std::string> &headers) {
+  return std::async(std::launch::async, &RestClient::head, this, url, headers);
+}
+
+// Callback de escritura
 size_t RestClient::WriteCallback(void *contents, size_t size, size_t nmemb,
                                  void *userp) {
   ((std::string *)userp)->append((char *)contents, size * nmemb);
   return size * nmemb;
 }
 
+// Conversión de body a JSON
 nlohmann::json HttpResponse::json() const {
   return nlohmann::json::parse(body);
 }

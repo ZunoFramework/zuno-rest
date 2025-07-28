@@ -50,6 +50,12 @@ target_link_libraries(zuno-rest PRIVATE libcurl nlohmann_json ${LIBPSL_LIBRARY})
 add_executable(zuno-rest-example
     ${CMAKE_CURRENT_SOURCE_DIR}/example/example.cpp
 )
+add_executable(zuno-rest-example-async
+    ${CMAKE_CURRENT_SOURCE_DIR}/example/example_async.cpp
+)
 
 # Link zuno-rest library to the example executable
 target_link_libraries(zuno-rest-example PRIVATE zuno-rest libcurl nlohmann_json ${LIBPSL_LIBRARY})
+
+# Link zuno-rest library to the example executable
+target_link_libraries(zuno-rest-example-async PRIVATE zuno-rest libcurl nlohmann_json ${LIBPSL_LIBRARY})
