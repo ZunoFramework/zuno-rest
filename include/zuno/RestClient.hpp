@@ -3,6 +3,8 @@
 #ifndef ZUNO_RESTCLIENT_H
 #define ZUNO_RESTCLIENT_H
 
+#include "RequestInterceptor.hpp"
+#include "ResponseInterceptor.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
@@ -42,6 +44,11 @@ public:
   head(const std::string &url,
        const std::unordered_map<std::string, std::string> &headers = {});
 
+  void
+  setRequestInterceptor(std::shared_ptr<RequestInterceptor> requestInterceptor);
+  void setResponseInterceptor(
+      std::shared_ptr<ResponseInterceptor> responseInterceptor);
+
 private:
   HttpResponse
   performRequest(const std::string &url, const std::string &method,
@@ -49,6 +56,9 @@ private:
                  const std::unordered_map<std::string, std::string> &headers);
   static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
                               void *userp);
+
+  std::shared_ptr<RequestInterceptor> requestInterceptor;
+  std::shared_ptr<ResponseInterceptor> responseInterceptor;
 };
 
 } // namespace zuno

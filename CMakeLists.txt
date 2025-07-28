@@ -30,6 +30,8 @@ set(SRC_FILES
 # Define HEADER_FILES
 set(HEADER_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/include/zuno/RestClient.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/zuno/RequestInterceptor.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/zuno/ResponseInterceptor.hpp
 )
 
 # Add library

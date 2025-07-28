@@ -1,7 +1,9 @@
 #include "zuno/RestClient.hpp"
-#include <algorithm>
+#include "zuno/RequestInterceptor.hpp"
+#include "zuno/ResponseInterceptor.hpp"
 #include <curl/curl.h>
 #include <iostream>
+#include <memory>
 
 namespace zuno {
 
@@ -9,10 +11,31 @@ RestClient::RestClient() { curl_global_init(CURL_GLOBAL_DEFAULT); }
 
 RestClient::~RestClient() { curl_global_cleanup(); }
 
+void RestClient::setRequestInterceptor(
+    std::shared_ptr<RequestInterceptor> requestInterceptor) {
+  this->requestInterceptor = requestInterceptor;
+}
+
+void RestClient::setResponseInterceptor(
+    std::shared_ptr<ResponseInterceptor> responseInterceptor) {
+  this->responseInterceptor = responseInterceptor;
+}
+
 HttpResponse RestClient::performRequest(
     const std::string &url, const std::string &method,
     const nlohmann::json &data,
     const std::unordered_map<std::string, std::string> &headers) {
+
+  std::string mutableUrl = url;
+  std::string mutableMethod = method;
+  nlohmann::json mutableData = data;
+  std::unordered_map<std::string, std::string> mutableHeaders = headers;
+
+  if (requestInterceptor) {
+    requestInterceptor->interceptRequest(mutableUrl, mutableMethod, mutableData,
+                                         mutableHeaders);
+  }
+
   CURL *curl;
   CURLcode res;
   std::string readBuffer;
@@ -20,19 +43,20 @@ HttpResponse RestClient::performRequest(
 
   curl = curl_easy_init();
   if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, mutableUrl.c_str());
 
     std::string dataStr;
-    if (method != "GET" && method != "HEAD" && method != "DELETE") {
-      dataStr = data.dump();
+    if (mutableMethod != "GET" && mutableMethod != "HEAD" &&
+        mutableMethod != "DELETE") {
+      dataStr = mutableData.dump();
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataStr.c_str());
       curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, dataStr.size());
     }
 
-    if (method != "GET") {
-      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
+    if (mutableMethod != "GET") {
+      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, mutableMethod.c_str());
     }
-    if (method == "HEAD") {
+    if (mutableMethod == "HEAD") {
       curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
     }
 
@@ -40,12 +64,12 @@ HttpResponse RestClient::performRequest(
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
     struct curl_slist *chunk = nullptr;
-    for (const auto &header : headers) {
+    for (const auto &header : mutableHeaders) {
       std::string headerStr = header.first + ": " + header.second;
       chunk = curl_slist_append(chunk, headerStr.c_str());
     }
 
-    if (method != "GET" && method != "HEAD") {
+    if (mutableMethod != "GET" && mutableMethod != "HEAD") {
       std::string contentLengthHeader =
           "Content-Length: " + std::to_string(dataStr.size());
       chunk = curl_slist_append(chunk, contentLengthHeader.c_str());
@@ -71,6 +95,11 @@ HttpResponse RestClient::performRequest(
     response.statusCode = static_cast<int>(httpCode);
     response.body = readBuffer;
     response.success = (httpCode >= 200 && httpCode < 300);
+
+    if (responseInterceptor) {
+      responseInterceptor->interceptResponse(
+          mutableUrl, mutableMethod, mutableData, mutableHeaders, response);
+    }
   }
 
   return response;
