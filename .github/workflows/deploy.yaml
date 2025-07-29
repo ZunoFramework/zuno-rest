@@ -50,13 +50,13 @@ jobs:
         run: cmake --build ${{ env.BUILD_DIR }} --config Release
 
       - name: "Diagnostic: List build output"
-        run: ls -R ${{ env.BUILD_DIR }}/output
+        run: ls -R ${{ env.BUILD_DIR }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.os }}
-          path: ${{ env.BUILD_DIR }}/output
+          path: ${{ env.BUILD_DIR }}
 
   release:
     needs: build
@@ -88,8 +88,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: build/output/zuno-rest.a
-          asset_name: libzuno-rest-linux-${{ github.ref_name }}.a
+          asset_path: release-artifacts/build-ubuntu-latest/zuno-rest-linux.a
+          asset_name: zuno-rest-linux-${{ github.ref_name }}.a
           asset_content_type: application/octet-stream
 
       - name: Upload release assets (macOS)
@@ -98,8 +98,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release-artifacts/build-macos-latest/zuno-rest.a
-          asset_name: libzuno-rest-macos-${{ github.ref_name }}.a
+          asset_path: release-artifacts/build-macos-latest/zuno-rest-macos.a
+          asset_name: zuno-rest-macos-${{ github.ref_name }}.a
           asset_content_type: application/octet-stream
 
       - name: Upload release assets (Windows)
@@ -108,6 +108,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release-artifacts/build-windows-latest/zuno-rest.lib
+          asset_path: release-artifacts/build-windows-latest/zuno-rest-windows.lib
           asset_name: zuno-rest-windows-${{ github.ref_name }}.lib
           asset_content_type: application/octet-stream

@@ -26,10 +26,23 @@ set(HEADER_FILES
 
 # Define and configure library
 add_library(zuno-rest STATIC ${SRC_FILES} ${HEADER_FILES})
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(OS_SUFFIX "linux")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(OS_SUFFIX "windows")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(OS_SUFFIX "macos")
+else()
+  set(OS_SUFFIX "unknown")
+endif()
+
+
 set_target_properties(zuno-rest PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output"
-  OUTPUT_NAME "zuno-rest"
+  OUTPUT_NAME "zuno-rest-${OS_SUFFIX}"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
+
 
 # Include headers
 target_include_directories(zuno-rest PUBLIC
