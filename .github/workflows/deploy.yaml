@@ -102,7 +102,7 @@ jobs:
         fi
         {
           echo 'CHANGELOG<<EOF'
-          echo "$LOG"
+          echo "$CHANGELOG"
           echo 'EOF'
         } >> $GITHUB_ENV
 
