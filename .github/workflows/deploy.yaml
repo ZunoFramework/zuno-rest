@@ -96,9 +96,9 @@ jobs:
       run: |
         LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
         if [ -z "$LAST_TAG" ]; then
-          LOG=$(git log --pretty=format:"- %s" --no-merges)
+          CHANGELOG=$(git log --pretty=format:"- %s" --no-merges)
         else
-          LOG=$(git log "$LAST_TAG"..HEAD --pretty=format:"- %s" --no-merges)
+          CHANGELOG=$(git log "$LAST_TAG"..HEAD --pretty=format:"- %s" --no-merges)
         fi
         {
           echo 'CHANGELOG<<EOF'
