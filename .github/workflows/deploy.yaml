@@ -88,7 +88,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release-artifacts/build-ubuntu-latest/output/zuno-rest.a
+          asset_path: build/output/zuno-rest.a
           asset_name: libzuno-rest-linux-${{ github.ref_name }}.a
           asset_content_type: application/octet-stream
 
