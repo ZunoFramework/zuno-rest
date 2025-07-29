@@ -35,6 +35,11 @@ jobs:
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-latest'
         run: choco install curl
+      
+      - name: Install libpsl (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ./scripts/install-libpsl.ps1
 
       - name: Clean previous builds (Linux/macOS)
         if: matrix.os != 'windows-latest'
@@ -49,7 +54,7 @@ jobs:
           } else {
             Write-Host "No build directory to clean"
           }
-          
+
       - name: Create build directory
         run: mkdir ${{ env.BUILD_DIR }}
 
