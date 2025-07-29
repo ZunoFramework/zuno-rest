@@ -49,9 +49,7 @@ jobs:
           } else {
             Write-Host "No build directory to clean"
           }
-
-
-
+          
       - name: Create build directory
         run: mkdir ${{ env.BUILD_DIR }}
 
