@@ -36,24 +36,9 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: choco install curl
 
-      - name: Install libpsl (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: ./scripts/install-libpsl.ps1
-
-      - name: Clean previous builds (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+      - name: Clean previous builds
+        shell: bash
         run: rm -rf ${{ env.BUILD_DIR }}
-
-      - name: Clean previous builds (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          if (Test-Path $env:BUILD_DIR) {
-            Remove-Item -Recurse -Force $env:BUILD_DIR
-          } else {
-            Write-Host "No build directory to clean"
-          }
 
       - name: Create build directory
         run: mkdir ${{ env.BUILD_DIR }}
@@ -64,14 +49,14 @@ jobs:
       - name: Build project
         run: cmake --build ${{ env.BUILD_DIR }} --config Release
 
+      - name: "Diagnostic: List build output"
+        run: ls -R ${{ env.BUILD_DIR }}/output
+
       - name: Upload build artifacts
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.os }}
-          path: |
-            ${{ env.BUILD_DIR }}/libzuno-rest.a
-            ${{ env.BUILD_DIR }}/Release/zuno-rest.lib
+          path: ${{ env.BUILD_DIR }}/output
 
   release:
     needs: build
@@ -82,6 +67,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Create GitHub Release
+        id: create-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,7 +78,7 @@ jobs:
           prerelease: false
 
       - name: Download all build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: release-artifacts
 
@@ -102,7 +88,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release-artifacts/build-ubuntu-latest/libzuno-rest.a
+          asset_path: release-artifacts/build-ubuntu-latest/output/zuno-rest.a
           asset_name: libzuno-rest-linux-${{ github.ref_name }}.a
           asset_content_type: application/octet-stream
 
@@ -112,7 +98,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release-artifacts/build-macos-latest/libzuno-rest.a
+          asset_path: release-artifacts/build-macos-latest/zuno-rest.a
           asset_name: libzuno-rest-macos-${{ github.ref_name }}.a
           asset_content_type: application/octet-stream
 
