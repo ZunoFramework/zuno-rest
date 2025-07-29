@@ -63,6 +63,12 @@ jobs:
             build/*.dylib
             build/*.so
             build/*.h
+            build/Release/*.a
+            build/Release/*.lib
+            build/Release/*.dll
+            build/Release/*.dylib
+            build/Release/*.so
+            build/Release/*.h
             !**/*.cpp
 
   release:
@@ -121,10 +127,10 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ env.ZUNO_VERSION }}
-        name: Zuno Release v${{ env.ZUNO_VERSION }}
+        name: Zuno Rest Release ${{ env.ZUNO_VERSION }}
         body: |
           🚀 New release of the Zuno Rest library
-          Version: **v${{ env.ZUNO_VERSION }}**
+          Version: **${{ env.ZUNO_VERSION }}**
 
           ## Changes
           ${{ env.CHANGELOG }}
