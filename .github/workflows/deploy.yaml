@@ -100,9 +100,11 @@ jobs:
         else
           LOG=$(git log "$LAST_TAG"..HEAD --pretty=format:"- %s" --no-merges)
         fi
-        echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-        echo "$LOG" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+        {
+          echo 'CHANGELOG<<EOF'
+          echo "$LOG"
+          echo 'EOF'
+        } >> $GITHUB_ENV
 
     - name: Download all build artifacts
       uses: actions/download-artifact@v4
