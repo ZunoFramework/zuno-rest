@@ -75,6 +75,8 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "ostream": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "future": "cpp",
+        "valarray": "cpp"
     }
 }

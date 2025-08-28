@@ -1,6 +1,6 @@
 # zuno-rest
 
-`zuno-rest` is a C++ library for making HTTP requests with support for both synchronous and asynchronous operations. It leverages `libcurl` for HTTP operations and `nlohmann/json` for JSON handling.
+`zuno-rest` is a C++ library for making HTTP requests with support for synchronous, asynchronous, and streaming operations. It leverages `libcurl` for HTTP operations and `nlohmann/json` for JSON handling.
 
 ## Requirements
 
@@ -19,6 +19,56 @@ To build the project, follow these steps:
    git clone https://github.com/ZunoFrameworkd/zuno-rest.git
    cd zuno-rest
    ```
+
+### Streaming Example
+
+The following example demonstrates how to use the streaming API for handling large responses or server-sent events:
+
+```cpp
+#include "zuno/RestClient.hpp"
+#include <iostream>
+#include <string>
+
+int main() {
+  // Create a REST client
+  zuno::RestClient client;
+  
+  // Define a callback function to process stream chunks
+  auto streamCallback = [](const zuno::StreamChunk& chunk) {
+    if (!chunk.isLast) {
+      std::cout << "Received chunk: " << chunk.data << std::endl;
+    } else {
+      std::cout << "Stream completed." << std::endl;
+    }
+  };
+  
+  // Make a streaming GET request
+  zuno::BaseResponse response = client.getStream(
+    "https://api.example.com/stream", 
+    streamCallback
+  );
+  
+  std::cout << "Response status code: " << response.statusCode << std::endl;
+  std::cout << "Response success: " << (response.success ? "true" : "false") << std::endl;
+  
+  // Asynchronous streaming is also supported
+  auto futureResponse = client.getStreamAsync(
+    "https://api.example.com/stream",
+    [](const zuno::StreamChunk& chunk) {
+      if (!chunk.isLast) {
+        std::cout << "Async received chunk: " << chunk.data << std::endl;
+      } else {
+        std::cout << "Async stream completed." << std::endl;
+      }
+    }
+  );
+  
+  // Wait for the asynchronous request to complete
+  zuno::BaseResponse asyncResponse = futureResponse.get();
+  
+  return 0;
+}
+```
 
 2. Create a build directory and navigate into it:
    ```sh
@@ -98,6 +148,24 @@ int main() {
 
   auto resInterceptor = std::make_shared<SimpleResponseInterceptor>();
   client.setResponseInterceptor(resInterceptor);
+
+  // Asynchronous GET request
+  auto futureResponse = client.getAsync("https://jsonplaceholder.typicode.com/posts/1");
+  
+  // Do other work while the request is in progress
+  std::cout << "Request in progress..." << std::endl;
+  
+  // Wait for the response
+  auto response = futureResponse.get();
+  
+  if (response.success) {
+    std::cout << "Response: " << response.body << std::endl;
+  } else {
+    std::cerr << "Error: " << response.statusCode << std::endl;
+  }
+  
+  return 0;
+}
 
   std::unordered_map<std::string, std::string> headers = {
       {"Content-Type", "application/json"}, {"charset", "UTF-8"}};
